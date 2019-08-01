@@ -8,10 +8,13 @@ import java.util.*;
 import org.assertj.core.util.Lists;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+
 @Service
 public class CityService {
 
-    @Autowired
+    @Resource
     private CityMapper cityMapper;
 
     public List<City> getAll(City city) {
