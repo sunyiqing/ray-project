@@ -1,4 +1,4 @@
-package com.ray.test;
+package com.ray.test.elasticsearch;
 
 import com.alibaba.fastjson.JSON;
 import com.ray.model.Sku;
