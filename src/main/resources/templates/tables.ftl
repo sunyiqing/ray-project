@@ -95,7 +95,10 @@
 							<i class="menu-icon fa fa-tachometer"></i>
 							<span class="menu-text"> 随机生成城市 </span>
 						</a>
-
+						<a href="${request.contextPath}/generate/ids/">
+							<i class="menu-icon fa fa-tachometer"></i>
+							<span class="menu-text"> 随机生成id </span>
+						</a>
 						<b class="arrow"></b>
 					</li>
 				</ul><!-- /.nav-list -->
