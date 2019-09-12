@@ -4,7 +4,12 @@ import com.ray.dto.SequenceRange;
 import com.ray.mapper.IdGeneratorMapper;
 import com.ray.model.IdGenerator;
 import org.elasticsearch.common.Strings;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
@@ -27,6 +32,9 @@ public class IdGeneratorService {
     @Resource
     private IdGeneratorMapper idGeneratorMapper;
     private final Map<String, SequenceRange> generatorMap = new ConcurrentHashMap<String, SequenceRange>();
+
+    @Autowired
+    PlatformTransactionManager platformTransactionManager;
 
     /**
      * 生成ID生成器的主方法
@@ -88,18 +96,31 @@ public class IdGeneratorService {
         }
         IdGenerator idGenerator = new IdGenerator();
         idGenerator.setPrimaryKey(primaryKey);
-        int row = idGeneratorMapper.updteSequenceNoById(idGenerator);
-        if (row > 0) {
-            IdGenerator idGeneratorEntity = getIDGenerator(primaryKey);
-            if (idGeneratorEntity == null) {
-                throw new RuntimeException("没有找到primaryKey=" + primaryKey + "的主键编号生成规则！");
+        // 事务定义
+        DefaultTransactionDefinition def = new DefaultTransactionDefinition();
+        // 设置事务的传播行为
+        def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        // 开启事务并获取事务状态
+        TransactionStatus status = platformTransactionManager.getTransaction(def);
+        try {
+            int row = idGeneratorMapper.updteSequenceNoById(idGenerator);
+            if (row > 0) {
+                IdGenerator idGeneratorEntity = getIDGenerator(primaryKey);
+                int i = 1/0;
+                if (idGeneratorEntity == null) {
+                    throw new RuntimeException("没有找到primaryKey=" + primaryKey + "的主键编号生成规则！");
+                }
+                platformTransactionManager.commit(status);
+                SequenceRange range = new SequenceRange();
+                range.setStartNo(idGeneratorEntity.getSequenceNo() - idGeneratorEntity.getStep() + 1);
+                range.setEndNo(idGeneratorEntity.getSequenceNo());
+                range.setCursorNo(range.getStartNo());
+                return range;
             }
-            SequenceRange range = new SequenceRange();
-            range.setStartNo(idGeneratorEntity.getSequenceNo() - idGeneratorEntity.getStep() + 1);
-            range.setEndNo(idGeneratorEntity.getSequenceNo());
-            range.setCursorNo(range.getStartNo());
-            return range;
+        }catch (Exception e){
+            platformTransactionManager.rollback(status);
         }
+
         return null;
     }
 
