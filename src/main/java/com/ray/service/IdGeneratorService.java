@@ -106,7 +106,6 @@ public class IdGeneratorService {
             int row = idGeneratorMapper.updteSequenceNoById(idGenerator);
             if (row > 0) {
                 IdGenerator idGeneratorEntity = getIDGenerator(primaryKey);
-                int i = 1/0;
                 if (idGeneratorEntity == null) {
                     throw new RuntimeException("没有找到primaryKey=" + primaryKey + "的主键编号生成规则！");
                 }
